@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Movie Reviewer</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0f0f0f;
+            color: #e8e8e8;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            background-color: #1a1a1a;
+            padding-top: 25px;
+            border-right: 1px solid #303030;
+        }
+
+        .sidebar h4 {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .sidebar a {
+            color: #bdbdbd;
+            display: block;
+            padding: 14px 22px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background-color: #2b2b2b;
+            color: #ffffff;
+        }
+
+        /* Cards */
+        .card {
+            background-color: #1a1a1a;
+            border: 1px solid #2f2f2f;
+            border-radius: 12px;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+            transition: 0.2s ease-in-out;
+        }
+
+        .card h3 {
+            color: #fff;
+            font-size: 2.2rem;
+        }
+
+        .text-secondary {
+            color: #b0b0b0 !important;
+        }
+
+        /* Quick Actions */
+        .quick-card:hover {
+            background: #272727 !important;
+        }
+
+        /* Responsive Fix */
+        @media (max-width: 768px) {
+            .sidebar {
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <h4 class="text-center mb-4">Admin Panel</h4>
+
+                <a href="#" class="active">Dashboard</a>
+                <a href="admin-add.html">Add Movie/Series</a>
+                <a href="admin-manage.html">Manage List</a>
+                <a href="#">Reviews</a>
+                <a href="#">Users</a>
+                <a href="#" class="text-danger mt-4 fw-bold">Logout</a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 p-4">
+
+                <h2 class="fw-bold mb-4">Dashboard Overview</h2>
+
+                <!-- Main Cards -->
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <div class="card p-4 text-center shadow-sm">
+                            <h3 id="totalMovies">0</h3>
+                            <p class="text-secondary">Total Movies</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card p-4 text-center shadow-sm">
+                            <h3 id="totalSeries">0</h3>
+                            <p class="text-secondary">Total Series</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card p-4 text-center shadow-sm">
+                            <h3 id="totalReviews">0</h3>
+                            <p class="text-secondary">Total Reviews</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Quick Actions -->
+                <h3 class="mt-5 mb-3">Quick Actions</h3>
+
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <a href="admin-add.html" style="text-decoration:none;">
+                            <div class="card quick-card p-4 text-center">
+                                <h5 class="text-white">Add Movie/Series</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <a href="admin-manage.html" style="text-decoration:none;">
+                            <div class="card quick-card p-4 text-center">
+                                <h5 class="text-white">Manage Movie List</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <a href="#" style="text-decoration:none;">
+                            <div class="card quick-card p-4 text-center">
+                                <h5 class="text-white">View All Reviews</h5>
+                            </div>
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auto Update Dashboard Counts -->
+    <script>
+        let movies = JSON.parse(localStorage.getItem("movies")) || [];
+
+        document.getElementById("totalMovies").innerText =
+            movies.filter(m => m.type === "movie").length;
+
+        document.getElementById("totalSeries").innerText =
+            movies.filter(m => m.type === "series").length;
+
+        document.getElementById("totalReviews").innerText =
+            movies.reduce((sum, item) => sum + (item.reviews?.length || 0), 0);
+    </script>
+
+</body>
+</html>
