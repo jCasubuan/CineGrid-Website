@@ -1,0 +1,5 @@
+/* login/signup modal */
+#loginModal .modal-footer .text-muted,
+#signupModal .modal-footer .text-muted {
+    color: #f8f9fa !important;
+}

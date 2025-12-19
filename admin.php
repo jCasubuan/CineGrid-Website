@@ -1,3 +1,8 @@
+<?php
+    session_start();
+    include 'includes/db_connect.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +18,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="admin-dashboard.css">
+    <link rel="stylesheet" href="assets/css/admin-dashboard.css">
 
 </head>
 
@@ -116,7 +121,8 @@
                 <button class="btn btn-outline-light btn-sm">
                     <i class="bi bi-bell"></i>
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="alert('Logout functionality')">
+                <!-- Logout button -->
+                <button class="btn btn-outline-danger btn-sm" onclick="alert('Logout functionality')">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </div>
@@ -646,7 +652,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Movie</h5>
+                    <h5 class="modal-title text-white"><i class="bi bi-plus-circle me-2"></i>Add New Movie</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -782,7 +788,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Series</h5>
+                    <h5 class="modal-title text-white"><i class="bi bi-plus-circle me-2"></i>Add New Series</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -976,6 +982,6 @@
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
 
-    <script src="admin-dashboard.js"></script>
+    <script src="assets/js/admin-dashboard.js"></script>
 </body>
 </html>

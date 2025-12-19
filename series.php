@@ -1,3 +1,9 @@
+<!-- PHP connection -->
+<?php 
+  session_start(); 
+  include 'includes/db_connect.php'; 
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,210 +13,37 @@
     <meta name="description" content="Browse all TV series on CineGrid - Filter by genre, year, and rating">
     <title>CineGrid | Series</title>
 
+    <!-- Site Icon / Logo -->
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+
     <!-- BootStrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="main.css">
+    <!-- Boostrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        rel="stylesheet">
 
-    <style>
-        /* Filter Sidebar */
-        .filter-sidebar {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            position: sticky;
-            top: 80px;
-        }
+    <!-- CineGrid base styles -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/listings.css"> 
+    <!-- 
+        listings.css is the css file shared by movies.php and series.php, 
+        though this is not the main.css 
+    -->
 
-        .filter-section {
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .filter-section:last-child {
-            border-bottom: none;
-        }
-
-        .filter-option {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-option:hover {
-            padding-left: 5px;
-        }
-
-        .filter-option input[type="checkbox"] {
-            margin-right: 10px;
-        }
-
-        /* Results Header */
-        .results-header {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-        }
-
-        /* Series Badge */
-        .series-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(76, 175, 80, 0.9);
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        /* Seasons Info */
-        .seasons-info {
-            font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Pagination */
-        .pagination {
-            margin-top: 40px;
-        }
-
-        .pagination .page-link {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            margin: 0 3px;
-            border-radius: 8px;
-        }
-
-        .pagination .page-link:hover {
-            background: rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
-        }
-
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
-        }
-
-        /* Mobile Filter */
-        @media (max-width: 768px) {
-            .filter-sidebar {
-                position: fixed;
-                top: 0;
-                left: -100%;
-                height: 100vh;
-                width: 280px;
-                z-index: 1050;
-                transition: left 0.3s ease;
-                overflow-y: auto;
-            }
-
-            .filter-sidebar.show {
-                left: 0;
-            }
-
-            .filter-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.7);
-                z-index: 1040;
-                display: none;
-            }
-
-            .filter-overlay.show {
-                display: block;
-            }
-        }
-    </style>
+    <!-- Bootstrap overrides (modals, buttons, navbar, etc.) -->
+    <link rel="stylesheet" href="assets/css/bootstrap-overrides.css">
+    
 
 </head>
 
 <body>
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <div class="container">
-            <!-- Logo with Icon -->
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="home.html">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32" class="me-2">
-                    <rect x="40" y="50" width="120" height="100" fill="none" stroke="#667eea" stroke-width="4" rx="8" />
-                    <line x1="100" y1="50" x2="100" y2="150" stroke="#667eea" stroke-width="4" />
-                    <line x1="40" y1="100" x2="160" y2="100" stroke="#667eea" stroke-width="4" />
-                    <rect x="30" y="60" width="8" height="12" fill="#667eea" rx="2" />
-                    <rect x="30" y="94" width="8" height="12" fill="#667eea" rx="2" />
-                    <rect x="30" y="128" width="8" height="12" fill="#667eea" rx="2" />
-                    <rect x="162" y="60" width="8" height="12" fill="#667eea" rx="2" />
-                    <rect x="162" y="94" width="8" height="12" fill="#667eea" rx="2" />
-                    <rect x="162" y="128" width="8" height="12" fill="#667eea" rx="2" />
-                    <polygon points="90,80 90,120 120,100" fill="#667eea" />
-                </svg>
-                CineGrid
-            </a>
-
-            <!-- Hamburger Menu Button -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Navigation Links -->
-                <ul class="navbar-nav ms-auto me-3">
-                    <li class="nav-item">
-                        <a class="nav-link" href="home.html">
-                            <i class="bi bi-house-door me-1"></i>Home
-                        </a>
-                    </li>
-
-                    <!-- Explore Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" id="exploreDropdown">
-                            <i class="bi bi-compass me-1"></i>Explore
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="exploreDropdown">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-fire me-2"></i>Trending</a></li>
-                            <li><a class="dropdown-item" href="movies.html"><i class="bi bi-film me-2"></i>Popular
-                                    Movies</a></li>
-                            <li><a class="dropdown-item" href="series.html"><i class="bi bi-tv me-2"></i>Popular
-                                    Series</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-star me-2"></i>Top Actors</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-calendar-event me-2"></i>Upcoming
-                                    Releases</a></li>
-                        </ul>
-                    </li>
-                </ul>
-
-                <!-- Action Buttons -->
-                <div class="d-flex gap-2">
-                    <!-- Search Button -->
-                    <button class="btn btn-sm btn-outline-light d-flex align-items-center" type="button"
-                        data-bs-toggle="modal" data-bs-target="#searchModal" aria-label="Search">
-                        <i class="bi bi-search me-1"></i> Search
-                    </button>
-
-                    <!-- Login Button -->
-                    <button class="btn btn-sm btn-outline-light d-flex align-items-center" type="button"
-                        data-bs-toggle="modal" data-bs-target="#loginModal" aria-label="Login">
-                        <i class="bi bi-person-circle me-1"></i> Login
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- for PHP -->
+    <?php $current_page = 'series'; ?>
+    <?php include 'includes/navbar.php'; ?>
 
     <!-- MAIN CONTENT -->
     <main class="container mt-0 pt-3 mb-5">
