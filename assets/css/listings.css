@@ -1,0 +1,155 @@
+/* Results Header */
+.results-header {
+    padding: 20px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 10;
+}
+
+/* Filter Sidebar */
+.filter-sidebar {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    position: sticky;
+    top: 80px;
+    z-index: 5;
+}
+
+.filter-section {
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* .filter-option:hover {
+    padding-left: 5px;
+} */
+
+.filter-option input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* View Toggle Buttons */
+.view-toggle {
+    display: flex;
+    gap: 5px;
+}
+
+.view-toggle .btn {
+    padding: 8px 15px;
+}
+
+
+/* Movie Cards Enhancement */
+.movie-grid {
+    min-height: 600px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 40px;
+}
+
+.pagination .page-link {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    margin: 0 3px;
+    border-radius: 8px;
+}
+
+.pagination .page-link:hover {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+/* List View Style */
+.list-view .movie-card {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 20px;
+}
+
+.list-view .movie-card img {
+    width: 120px;
+    height: 180px;
+    object-fit: cover;
+}
+
+.list-view .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Mobile Filter Toggle */
+@media (max-width: 768px) {
+    .filter-sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100vh;
+        width: 280px;
+        z-index: 1050;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .filter-sidebar.show {
+        left: 0;
+    }
+
+    .filter-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1040;
+        display: none;
+    }
+
+    .filter-overlay.show {
+        display: block;
+    }
+}
+
+/* Series Badge */
+.series-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(76, 175, 80, 0.9);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* Seasons Info */
+.seasons-info {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}

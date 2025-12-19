@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+    <!-- Main grid frame - thicker stroke -->
+    <rect x="40" y="50" width="120" height="100" fill="none" stroke="#667eea" stroke-width="8" rx="8"/>
+    
+    <!-- Grid lines - thicker -->
+    <line x1="100" y1="50" x2="100" y2="150" stroke="#667eea" stroke-width="8"/>
+    <line x1="40" y1="100" x2="160" y2="100" stroke="#667eea" stroke-width="8"/>
+    
+    <!-- Film sprocket holes - larger and more visible -->
+    <rect x="26" y="58" width="12" height="16" fill="#667eea" rx="3"/>
+    <rect x="26" y="92" width="12" height="16" fill="#667eea" rx="3"/>
+    <rect x="26" y="126" width="12" height="16" fill="#667eea" rx="3"/>
+    
+    <rect x="162" y="58" width="12" height="16" fill="#667eea" rx="3"/>
+    <rect x="162" y="92" width="12" height="16" fill="#667eea" rx="3"/>
+    <rect x="162" y="126" width="12" height="16" fill="#667eea" rx="3"/>
+    
+    <!-- Play button - larger -->
+    <polygon points="85,75 85,125 130,100" fill="#667eea"/>
+</svg>
