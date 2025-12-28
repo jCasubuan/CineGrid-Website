@@ -34,6 +34,9 @@ require_once 'includes/init.php';
 </head>
 
 <body data-type="series">
+    <!-- Banner for admin browsing pagaes -->
+    <?php include 'includes/admin-banner.php'; ?>
+
     <!-- for PHP -->
     <?php include 'includes/navbar.php'; ?>
 
@@ -619,6 +622,6 @@ require_once 'includes/init.php';
         </section>
     </main>
 
-    <?php include 'includes/movie-details-modals.php'?>
+    <?php include 'includes/details-rating-modals.php'?>
     
     <?php include 'includes/footer.php'; ?>

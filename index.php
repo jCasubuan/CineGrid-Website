@@ -1,6 +1,19 @@
 <!-- PHP connection -->
 <?php
 require_once 'includes/init.php';
+
+// Fetch top 4 highest rated active movies
+$featuredQuery = "
+    SELECT m.*, GROUP_CONCAT(g.name SEPARATOR ' • ') as genre_list
+    FROM movies m
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+    WHERE m.status = 'active'
+    GROUP BY m.movie_id
+    ORDER BY m.rating DESC
+    LIMIT 4
+";
+$featuredResult = $Conn->query($featuredQuery);
 ?>
 
 <!DOCTYPE html>
@@ -34,6 +47,31 @@ require_once 'includes/init.php';
 </head>
 
 <body>
+    <!-- Banner for admin browsing pagaes -->
+    <?php include 'includes/admin-banner.php'; ?>
+
+    <!-- Alert message for new users only -->
+    <?php if (!empty($_SESSION['welcome_new_user'])): ?>
+        <div class="alert alert-success text-center rounded-0 mb-0" id="welcomeAlert">
+            <strong>Welcome to CineGrid, <?= htmlspecialchars($_SESSION['welcome_name']); ?>!</strong>
+            Your account has been successfully created.
+        </div>
+
+        <script>
+            setTimeout(() => {
+                const alert = document.getElementById('welcomeAlert');
+                if (alert) {
+                    alert.classList.add('fade');
+                    setTimeout(() => alert.remove(), 300);
+                }
+            }, 3000);
+        </script>
+
+        <?php
+            unset($_SESSION['welcome_new_user']);
+            unset($_SESSION['welcome_name']);
+        ?>
+    <?php endif; ?>
 
     <!-- navbar.php connection -->
     <?php include 'includes/navbar.php'; ?>
@@ -129,7 +167,7 @@ require_once 'includes/init.php';
     <!-- Main CONTENT -->
     <main>
         <!-- Movie List Section -->
-        <section class="container my-5" id="popular-movies">
+       <section class="container my-5" id="popular-movies">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0 section-header">Popular Movies</h2>
                 <a href="movies.php" class="btn btn-outline-light btn-sm">
@@ -139,71 +177,35 @@ require_once 'includes/init.php';
 
             <!-- 2 columns on mobile, 4 on desktop -->
             <div class="row row-cols-2 row-cols-md-4 g-4 mb-5">
+                <?php if($featuredResult->num_rows > 0): ?>
+                    <?php while($movie = $featuredResult->fetch_assoc()): ?>
+                        <div class="col">
+                            <a href="movie-details.php?id=<?= $movie['movie_id']; ?>" class="text-decoration-none">
+                                <div class="card media-card bg-dark text-white shadow-sm">
+                                    <img src="<?= htmlspecialchars($movie['poster_path']); ?>" 
+                                    class="card-img-top" 
+                                    alt="<?= htmlspecialchars($movie['title']); ?>">
+                                    
+                                    <span class="rating-badge">
+                                        <i class="bi bi-star-fill text-warning"></i> <?= number_format($movie['rating'], 1); ?>
+                                    </span>
 
-                <!-- Movie Card 1 -->
-                <div class="col">
-                    <a href="movie-details.php" class="text-decoration-none">
-                        <div class="card media-card bg-dark text-white position-relative">
-                            <img src="https://via.placeholder.com/300x450/667eea/ffffff?text=Inception" class="card-img-top" alt="Inception">
-                            <span class="rating-badge">
-                                <i class="bi bi-star-fill text-warning"></i> 8.8
-                            </span>
-                            <div class="card-body">
-                                <h5 class="card-title">Inception</h5>
-                                <p class="card-text text-white">Sci-Fi • 2010</p>
-                            </div>
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-1 text-truncate fw-bold"><?= htmlspecialchars($movie['title']); ?></h6>
+                                        <p class="card-text small text-white-50 mb-0">
+                                            <?= htmlspecialchars($movie['genre_list'] ?: 'General'); ?> • <?= $movie['release_year']; ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
-                </div>
-
-                <!-- Movie Card 2 -->
-                <div class="col">
-                    <a href="movie-details.php" class="text-decoration-none">
-                        <div class="card media-card bg-dark text-white position-relative">
-                            <img src="https://via.placeholder.com/300x450/764ba2/ffffff?text=Interstellar" class="card-img-top" alt="Interstellar">
-                            <span class="rating-badge">
-                                <i class="bi bi-star-fill text-warning"></i> 8.6
-                            </span>
-                            <div class="card-body">
-                                <h5 class="card-title">Interstellar</h5>
-                                <p class="card-text text-white">Sci-Fi • 2014</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Movie Card 3 -->
-                <div class="col">
-                    <a href="movie-details.php" class="text-decoration-none">
-                        <div class="card media-card bg-dark text-white position-relative">
-                            <img src="https://via.placeholder.com/300x450/4ecdc4/ffffff?text=The+Matrix" class="card-img-top" alt="The Matrix">
-                            <span class="rating-badge">
-                                <i class="bi bi-star-fill text-warning"></i> 8.7
-                            </span>
-                            <div class="card-body">
-                                <h5 class="card-title">The Matrix</h5>
-                                <p class="card-text text-white">Sci-Fi • 1999</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Movie Card 4 -->
-                <div class="col">
-                    <a href="movie-details.php" class="text-decoration-none">
-                        <div class="card media-card bg-dark text-white position-relative">
-                            <img src="https://via.placeholder.com/300x450/ff6b6b/ffffff?text=Parasite" class="card-img-top" alt="Parasite">
-                            <span class="rating-badge">
-                                <i class="bi bi-star-fill text-warning"></i> 8.5
-                            </span>
-                            <div class="card-body">
-                                <h5 class="card-title">Parasite</h5>
-                                <p class="card-text text-white">Thriller • 2019</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center text-white py-5">
+                        <p>No movies added yet. Check back later!</p>
+                    </div>
+                <?php endif; ?>
+            </div>          
         </section>
 
         <!-- Popular Series Section -->

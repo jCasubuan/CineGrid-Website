@@ -229,3 +229,128 @@ html {
     border-radius: 8px;
     display: inline-block;
 }
+
+/* ===================================
+   LOGIN & SIGNUP MODAL STYLES
+   =================================== */
+
+/* Form control invalid state */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+/* Form control focus state */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* Modal content rounded corners */
+.modal-content {
+    border-radius: 12px;
+}
+
+/* Disabled button state */
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===================================
+   PASSWORD TOGGLE STYLES
+   =================================== */
+
+/* Login password toggle button */
+#togglePassword {
+    z-index: 10;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 1 !important;
+    margin-top: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    color: #6c757d !important;
+}
+
+#togglePassword:hover {
+    color: #0d6efd !important;
+    transform: scale(1.1);
+}
+
+#togglePassword:active {
+    transform: scale(0.95);
+}
+
+/* Ensure login password input doesn't interfere */
+#passwordInput {
+    padding-right: 45px;
+}
+
+/* Signup password toggle button */
+#toggleSignupPassword {
+    z-index: 10;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 1 !important;
+    margin-top: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    color: #6c757d !important;
+}
+
+#toggleSignupPassword:hover {
+    color: #0d6efd !important;
+    transform: scale(1.1);
+}
+
+#toggleSignupPassword:active {
+    transform: scale(0.95);
+}
+
+/* Ensure signup password input doesn't interfere */
+#signupPassword {
+    padding-right: 45px;
+}
+
+/* Ensure the card is a standard poster shape */
+.media-card {
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    height: 100%; /* Makes all cards equal height in a row */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Force the image to show the FULL poster without cutting it off */
+.media-card .card-img-top {
+    width: 100%;
+    aspect-ratio: 2 / 3; /* Standard Movie Poster Ratio */
+    object-fit: cover; /* This fills the space perfectly */
+}
+
+/* Push the title and info to the bottom of the card */
+.media-card .card-body {
+    padding: 12px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    margin-top: auto; /* Pushes content to the bottom */
+}
+
+.media-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}

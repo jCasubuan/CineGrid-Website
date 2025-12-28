@@ -5,7 +5,8 @@
             <div class="modal-content bg-dark text-white">
                 <div class="modal-header border-0">
                     <h5 class="modal-title" id="ratingModalLabel">
-                        <i class="bi bi-star me-2"></i>Rate This Movie
+                        <i class="bi bi-star me-2"></i>
+                        Rate This <?= ucfirst($_SESSION['content_type'] ?? 'Item'); ?>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>

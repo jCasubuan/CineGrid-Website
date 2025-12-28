@@ -34,6 +34,9 @@ require_once 'includes/init.php';
 </head>
 
 <body>
+    <!-- Banner for admin browsing pagaes -->
+    <?php include 'includes/admin-banner.php'; ?>
+    
     <!-- navbar.php connection -->
     <?php include 'includes/navbar.php'; ?>
 
