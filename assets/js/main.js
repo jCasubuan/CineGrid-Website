@@ -65,14 +65,242 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Login error
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     const urlParams = new URLSearchParams(window.location.search);
-    //     if (urlParams.has('login_error')) {
-    //         // Use Bootstrap's Modal API to open the modal
-    //         var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    //         loginModal.show();
-    //     }
-    // });
+});
 
+// for login modals
+/* ===================================
+   LOGIN MODAL FUNCTIONALITY
+   =================================== */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('passwordInput');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const emailInput = document.getElementById('emailInput');
+
+    // Check if login modal elements exist before running
+    if (!loginForm) return;
+
+    // Password Toggle Functionality
+    if (togglePassword && passwordInput && toggleIcon) {
+        togglePassword.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent any default behavior
+            
+            console.log('Toggle clicked!'); // Debug
+            console.log('Current type:', passwordInput.getAttribute('type'));
+            
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            console.log('New type:', type); // Debug
+            
+            // Toggle icon
+            if (type === 'text') {
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+            
+            // Add visual feedback
+            togglePassword.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                togglePassword.style.transform = 'scale(1)';
+            }, 150);
+        });
+    } else {
+        console.error('Password toggle elements not found:', {
+            togglePassword: !!togglePassword,
+            passwordInput: !!passwordInput,
+            toggleIcon: !!toggleIcon
+        });
+    }
+
+    // Form Submission with Loading State
+    if (loginForm && loginBtn) {
+        loginForm.addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const email = emailInput ? emailInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
+
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                if (emailInput) {
+                    emailInput.classList.add('is-invalid');
+                }
+                return;
+            }
+
+            // Show loading state
+            loginBtn.disabled = true;
+            if (loginSpinner) {
+                loginSpinner.classList.remove('d-none');
+            }
+            if (loginBtnText) {
+                loginBtnText.textContent = 'Logging in...';
+            }
+        });
+    }
+
+    // Remove invalid class on input
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    }
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    }
+});
+
+/* ===================================
+   SIGNUP MODAL FUNCTIONALITY
+   =================================== */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const signupForm = document.getElementById('signupForm');
+    const signupBtn = document.getElementById('signupBtn');
+    const signupSpinner = document.getElementById('signupSpinner');
+    const signupBtnText = document.getElementById('signupBtnText');
+    const toggleSignupPassword = document.getElementById('toggleSignupPassword');
+    const signupPasswordInput = document.getElementById('signupPassword');
+    const toggleSignupIcon = document.getElementById('toggleSignupIcon');
+    const signupNameInput = document.getElementById('signupName');
+    const signupEmailInput = document.getElementById('signupEmail');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    // Check if signup modal elements exist before running
+    if (!signupForm) return;
+
+    // Password Toggle Functionality
+    if (toggleSignupPassword && signupPasswordInput && toggleSignupIcon) {
+        toggleSignupPassword.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const type = signupPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            signupPasswordInput.setAttribute('type', type);
+            
+            // Toggle icon
+            if (type === 'text') {
+                toggleSignupIcon.classList.remove('bi-eye');
+                toggleSignupIcon.classList.add('bi-eye-slash');
+            } else {
+                toggleSignupIcon.classList.remove('bi-eye-slash');
+                toggleSignupIcon.classList.add('bi-eye');
+            }
+            
+            // Add visual feedback
+            toggleSignupPassword.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                toggleSignupPassword.style.transform = 'scale(1)';
+            }, 150);
+        });
+    }
+
+    // Password Strength Indicator
+    if (signupPasswordInput && passwordStrength) {
+        signupPasswordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 10) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            passwordStrength.style.width = strength + '%';
+            
+            // Color based on strength
+            if (strength <= 25) {
+                passwordStrength.className = 'progress-bar bg-danger';
+            } else if (strength <= 50) {
+                passwordStrength.className = 'progress-bar bg-warning';
+            } else if (strength <= 75) {
+                passwordStrength.className = 'progress-bar bg-info';
+            } else {
+                passwordStrength.className = 'progress-bar bg-success';
+            }
+        });
+    }
+
+    // Form Submission with Loading State
+    if (signupForm && signupBtn) {
+        signupForm.addEventListener('submit', function(e) {
+            // Basic client-side validation
+            const fullname = signupNameInput ? signupNameInput.value.trim() : '';
+            const email = signupEmailInput ? signupEmailInput.value.trim() : '';
+            const password = signupPasswordInput ? signupPasswordInput.value.trim() : '';
+
+            if (!fullname || !email || !password) {
+                e.preventDefault();
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // Name validation (at least 2 characters)
+            if (fullname.length < 2) {
+                e.preventDefault();
+                if (signupNameInput) {
+                    signupNameInput.classList.add('is-invalid');
+                }
+                alert('Please enter your full name (at least 2 characters).');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                if (signupEmailInput) {
+                    signupEmailInput.classList.add('is-invalid');
+                }
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            // Password validation (at least 6 characters)
+            if (password.length < 6) {
+                e.preventDefault();
+                if (signupPasswordInput) {
+                    signupPasswordInput.classList.add('is-invalid');
+                }
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+
+            // Show loading state
+            signupBtn.disabled = true;
+            if (signupSpinner) {
+                signupSpinner.classList.remove('d-none');
+            }
+            if (signupBtnText) {
+                signupBtnText.textContent = 'Creating account...';
+            }
+        });
+    }
+
+    // Remove invalid class on input
+    [signupNameInput, signupEmailInput, signupPasswordInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+        }
+    });
 });

@@ -1,0 +1,36 @@
+For movies (copy and paste this in the add-movie modals, just be careful to not include whitespaces)
+
+1. Avengers: Infinity War
+
+Title: Avengers: Infinity War
+Year: 2018
+Rating: 8.4 (or just think what rating you want, it doesn't matter)
+Overview: The Avengers and their allies must be willing to sacrifice all in an attempt to defeat the powerful Thanos before his blitz of devastation and ruin puts an end to the universe.
+Poster Path: assets/img/posters/avengers-infinity-war-poster.jpg
+Backdrop Path: assets/img/backdrops/avengers-infinity-war-backdrop.jpg
+Genre: Action, Adventure, Sci-fi
+Trailer: https://youtu.be/6ZfuNTqbHE8
+Directors: Anthony Russo 
+           Joe Russo
+Movie Cast and their Character Name:
+Robert Downey Jr - Iron Man, Tony Stark
+Josh Brolin - Thanos
+Mark Ruffalo - Hulk, Bruce Banner
+Scarlett Johansson - Natasha Romanoff
+Chris Evans - Captain America, Steve Rogers
+Chris Hemsworth - Thor Odinson
+Tom Holland - Spider-Man, Peter Parker
+Elizabeth Olsen - Scarlet Witch
+Paul Bettany - Vision
+Benedict Cumberbatch - Stephen Strange
+Anthony Mackie - Sam Wilson
+Tom Hiddleston - Loki
+Chris Pratt - Star-Lord
+Sebastian Stan - Bucky Barnes
+Zoe Saldana - Gamora
+Vin Diesel - Groot
+Chadwick Boseman - Black Panther
+Benedict Wong - Wong
+
+
+

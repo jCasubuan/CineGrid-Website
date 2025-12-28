@@ -105,19 +105,87 @@ function deleteReview(id) {
 }
 
 // Form Submissions
-document.getElementById('addMovieForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    alert('Movie added successfully!\nIn production, this would send data to your backend.');
-    bootstrap.Modal.getInstance(document.getElementById('addMovieModal')).hide();
-    e.target.reset();
+// add movie (STEP 1)
+document.addEventListener('DOMContentLoaded', function () {
+    const addMovieForm = document.getElementById('addMovieForm');
+    const addMovieBtn = document.getElementById('addMovieBtn');
+    const addMovieSpinner = document.getElementById('addMovieSpinner');
+    const addMovieBtnText = document.getElementById('addMovieBtnText');
+    const addMovieAlert = document.getElementById('addMovieAlert');
+    const addMovieAlertMessage = document.getElementById('addMovieAlertMessage');
+
+    if (!addMovieForm) return;
+
+    addMovieForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(addMovieForm);
+
+        // Basic validation
+        if (
+            !formData.get('title')?.trim() ||
+            !formData.get('overview')?.trim() ||
+            !formData.get('release_year')
+        ) {
+            showAlert('Please fill in all required fields.', 'danger');
+            return;
+        }
+
+        // Loading state
+        addMovieBtn.disabled = true;
+        addMovieSpinner.classList.remove('d-none');
+        addMovieBtnText.textContent = 'Saving...';
+
+        fetch('admin-actions/save-movie-basic.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showAlert(data.error, 'danger');
+                resetBtn();
+                return;
+            }
+
+            // STEP 1 SUCCESS → move to STEP 2
+            bootstrap.Modal.getInstance(
+                document.getElementById('addMovieModal')
+            ).hide();
+
+            new bootstrap.Modal(
+                document.getElementById('addMovieGenresModal')
+            ).show();
+
+            addMovieForm.reset();
+            resetBtn();
+        })
+        .catch(() => {
+            showAlert('Unexpected error occurred.', 'danger');
+            resetBtn();
+        });
+    });
+
+    function showAlert(message, type) {
+        addMovieAlert.className = `alert alert-${type} alert-dismissible fade show`;
+        addMovieAlertMessage.textContent = message;
+    }
+
+    function resetBtn() {
+        addMovieBtn.disabled = false;
+        addMovieSpinner.classList.add('d-none');
+        addMovieBtnText.textContent = 'Add Movie';
+    }
 });
 
+// edit movie
 document.getElementById('editMovieForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     alert('Movie updated successfully!');
     bootstrap.Modal.getInstance(document.getElementById('editMovieModal')).hide();
 });
 
+// add series
 document.getElementById('addSeriesForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     alert('Series added successfully!');
@@ -125,12 +193,14 @@ document.getElementById('addSeriesForm')?.addEventListener('submit', (e) => {
     e.target.reset();
 });
 
+// edit series
 document.getElementById('editSeriesForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     alert('Series updated successfully!');
     bootstrap.Modal.getInstance(document.getElementById('editSeriesModal')).hide();
 });
 
+// add users
 document.getElementById('addUserForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     alert('User added successfully!');
@@ -138,6 +208,7 @@ document.getElementById('addUserForm')?.addEventListener('submit', (e) => {
     e.target.reset();
 });
 
+// edit users
 document.getElementById('editUserForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     alert('User updated successfully!');
@@ -160,3 +231,464 @@ const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-tog
 tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl);
 });
+
+// add genres
+document.addEventListener('DOMContentLoaded', () => {
+    const genreForm = document.getElementById('movieGenresForm');
+    const genreAlert = document.createElement('div'); // Creating alert dynamically if not in HTML
+    genreAlert.id = 'genreAlert';
+    
+    if (!genreForm) return;
+
+    // Inject alert at top of form if it doesn't exist
+    genreForm.prepend(genreAlert);
+    genreAlert.className = 'alert d-none';
+
+    genreForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(genreForm);
+        
+        // Validation: Check if at least one genre is selected
+        if (!formData.has('genres[]')) {
+            showGenreAlert('Please select at least one genre.', 'danger');
+            return;
+        }
+
+        fetch('admin-actions/save-movie-genres.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showGenreAlert(data.error, 'danger');
+                return;
+            }
+
+            showGenreAlert('Genres saved successfully.', 'success');
+
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(
+                    document.getElementById('addMovieGenresModal')
+                );
+                modal.hide();
+
+                // Move to Trailer Modal
+                new bootstrap.Modal(
+                    document.getElementById('addMovieTrailerModal')
+                ).show();
+
+            }, 800);
+        })
+        .catch(() => {
+            showGenreAlert('Unexpected error occurred.', 'danger');
+        });
+    });
+
+    function showGenreAlert(message, type) {
+        genreAlert.className = `alert alert-${type}`;
+        genreAlert.textContent = message;
+        genreAlert.classList.remove('d-none');
+    }
+});
+
+// add trailer
+document.addEventListener('DOMContentLoaded', () => {
+    const trailerForm = document.getElementById('movieTrailerForm');
+    const trailerAlert = document.getElementById('trailerAlert');
+
+    if (!trailerForm) return;
+
+    trailerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(trailerForm);
+
+        fetch('admin-actions/save-movie-trailer.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showTrailerAlert(data.error, 'danger');
+                return;
+            }
+
+            showTrailerAlert('Trailer saved successfully.', 'success');
+
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(
+                    document.getElementById('addMovieTrailerModal')
+                );
+                modal.hide();
+
+                new bootstrap.Modal(
+                    document.getElementById('addMovieDirectorsModal')
+                ).show();
+
+            }, 800);
+        })
+        .catch(() => {
+            showTrailerAlert('Unexpected error occurred.', 'danger');
+        });
+    });
+
+    function showTrailerAlert(message, type) {
+        trailerAlert.className = `alert alert-${type}`;
+        trailerAlert.textContent = message;
+        trailerAlert.classList.remove('d-none');
+    }
+});
+
+// add directors
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('movieDirectorsForm');
+    const container = document.getElementById('directorsContainer');
+    const alertBox = document.getElementById('directorsAlert');
+    const addBtn = document.getElementById('addDirectorBtn');
+
+    if (!form) return;
+
+    addBtn.addEventListener('click', () => {
+        const row = document.createElement('div');
+        row.className = 'input-group mb-2 director-row';
+        row.innerHTML = `
+            <input type="text" name="directors[]" class="form-control" placeholder="Director name" required>
+            <button type="button" class="btn btn-outline-danger remove-director">
+                <i class="bi bi-x"></i>
+            </button>
+        `;
+        container.appendChild(row);
+    });
+
+    container.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-director')) {
+            e.target.closest('.director-row').remove();
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        fetch('admin-actions/save-movie-directors.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showAlert(data.error, 'danger');
+                return;
+            }
+
+            showAlert('Directors saved successfully.', 'success');
+
+            setTimeout(() => {
+                const directorsModal = bootstrap.Modal.getInstance(
+                    document.getElementById('addMovieDirectorsModal')
+                );
+                directorsModal.hide();
+
+                const castModal = new bootstrap.Modal(
+                    document.getElementById('addMovieCastModal')
+                );
+                castModal.show();
+            }, 800);
+
+        })
+        .catch(() => {
+            showAlert('Unexpected error occurred.', 'danger');
+        });
+    });
+
+    function showAlert(message, type) {
+        alertBox.className = `alert alert-${type}`;
+        alertBox.textContent = message;
+        alertBox.classList.remove('d-none');
+    }
+});
+
+// add cast
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('movieCastForm');
+    const container = document.getElementById('castContainer');
+    const alertBox = document.getElementById('castAlert');
+    const addBtn = document.getElementById('addCastBtn');
+
+    if (!form) return;
+
+    addBtn.addEventListener('click', () => {
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2 cast-row';
+        row.innerHTML = `
+            <div class="col-md-5">
+                <input type="text" name="actors[]" class="form-control" placeholder="Actor name" required>
+            </div>
+            <div class="col-md-5">
+                <input type="text" name="characters[]" class="form-control" placeholder="Character name" required>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="button" class="btn btn-outline-danger remove-cast">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    container.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-cast')) {
+            e.target.closest('.cast-row').remove();
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    fetch('admin-actions/save-movie-cast.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showAlert(data.error, 'danger');
+            return;
+        }
+
+        if (data.status === 'ok') {
+            // Close Cast modal
+            const castModal = bootstrap.Modal.getInstance(
+                document.getElementById('addMovieCastModal')
+            );
+            castModal.hide();
+
+            // Open Review modal
+            const reviewModal = new bootstrap.Modal(
+                document.getElementById('reviewMovieDraftModal')
+            );
+            reviewModal.show();
+        }
+    })
+    .catch(() => {
+        showAlert('Unexpected error occurred.', 'danger');
+    });
+});
+
+    function showAlert(message, type) {
+        alertBox.className = `alert alert-${type}`;
+        alertBox.textContent = message;
+        alertBox.classList.remove('d-none');
+    }
+});
+
+// movie draft
+document.addEventListener('DOMContentLoaded', () => {
+    const reviewModal = document.getElementById('reviewMovieDraftModal');
+    const reviewContent = document.getElementById('reviewContent');
+    const reviewAlert = document.getElementById('reviewAlert');
+
+    if (!reviewModal) return;
+
+    reviewModal.addEventListener('show.bs.modal', () => {
+        fetch('admin-actions/get-movie-draft.php')
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showAlert(data.error, 'danger');
+                    return;
+                }
+                renderDraft(data);
+            })
+            .catch(() => {
+                showAlert('Failed to load draft.', 'danger');
+            });
+    });
+
+    function renderDraft(draft) {
+        let html = '';
+
+        /* BASIC INFO */
+        html += section('Basic Information', `
+            <div class="row">
+                <div class="col-8">
+                    <strong>Title:</strong> ${escapeHtml(draft.basic.title)}<br>
+                    <strong>Type:</strong> <span class="badge bg-secondary">${draft.basic.type.toUpperCase()}</span><br>
+                    <strong>Rating:</strong> <i class="bi bi-star-fill text-warning"></i> ${draft.basic.rating}/10<br>
+                    <strong>Release Year:</strong> ${draft.basic.release_year}
+                </div>
+                <div class="col-4 text-end">
+                    <img src="${draft.basic.poster_path}" style="width: 80px; border-radius: 5px;">
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Overview:</strong>
+                <div class="small text-white">${escapeHtml(draft.basic.overview)}</div>
+            </div>
+        `);
+
+        /* GENRES */
+        html += section(
+            'Genres',
+            draft.genres && draft.genres.length
+                ? draft.genres.map(g => `<span class="badge bg-primary me-1">${escapeHtml(g)}</span>`).join(' ')
+                : '<em>No genres selected</em>'
+        );
+
+        /* TRAILER */
+        html += section('Trailer', draft.trailer.url
+            ? `<a href="${draft.trailer.url}" target="_blank">${draft.trailer.url}</a>`
+            : '<em>No trailer</em>'
+        );
+
+        /* DIRECTORS */
+        html += section(
+            'Directors',
+            draft.directors.length
+                ? `<ul>${draft.directors.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>`
+                : '<em>No directors</em>'
+        );
+
+        /* CAST */
+        html += section(
+            'Cast',
+            draft.cast.length
+                ? `<ul>${draft.cast.map(c =>
+                    `<li>${escapeHtml(c.actor)} as <em>${escapeHtml(c.character)}</em></li>`
+                  ).join('')}</ul>`
+                : '<em>No cast</em>'
+        );
+
+        reviewContent.innerHTML = html;
+    }
+
+    function section(title, body) {
+        return `
+            <div class="mb-4">
+                <h6 class="border-bottom pb-1 mb-2">${title}</h6>
+                ${body}
+            </div>
+        `;
+    }
+
+    function showAlert(msg, type) {
+        reviewAlert.className = `alert alert-${type}`;
+        reviewAlert.textContent = msg;
+        reviewAlert.classList.remove('d-none');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+});
+
+// confirm button
+// document.addEventListener('DOMContentLoaded', () => {
+//     const confirmBtn = document.getElementById('confirmMovieSaveBtn');
+
+//     if (!confirmBtn) return;
+
+//     confirmBtn.addEventListener('click', () => {
+//         confirmBtn.disabled = true;
+
+//         fetch('admin-actions/commit-movie.php', { method: 'POST' })
+//             .then(res => res.json())
+//             .then(data => {
+//                 if (data.status === 'success') {
+//                     location.reload();
+//                 } else {
+//                     confirmBtn.disabled = false;
+//                     alert('Failed to save movie.');
+//                 }
+//             })
+//             .catch(() => {
+//                 confirmBtn.disabled = false;
+//                 alert('Unexpected error occurred.');
+//             });
+//     });
+// });
+// confirm button
+document.addEventListener('DOMContentLoaded', () => {
+    const confirmBtn = document.getElementById('confirmMovieSaveBtn');
+
+    if (!confirmBtn) return;
+
+    confirmBtn.addEventListener('click', () => {
+        // 1. Show a "Processing" alert immediately
+        Swal.fire({
+            title: 'Saving Movie...',
+            text: 'Please wait while we update the database.',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        confirmBtn.disabled = true;
+
+        fetch('admin-actions/commit-movie.php', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 2. Show Success Alert
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'The movie has been added successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#0d6efd'
+                    }).then(() => {
+                        // 3. Reload only AFTER they click the "OK" button
+                        location.reload();
+                    });
+                } else {
+                    confirmBtn.disabled = false;
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.error || 'Failed to save movie.',
+                        icon: 'error'
+                    });
+                }
+            })
+            .catch(() => {
+                confirmBtn.disabled = false;
+                Swal.fire({
+                    title: 'Oops!',
+                    text: 'An unexpected error occurred.',
+                    icon: 'error'
+                });
+            });
+    });
+});
+
+// star for rating
+function toggleFeatured(movieId) {
+    fetch(`admin-actions/toggle-featured.php?id=${movieId}`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // SweetAlert notification
+            const icon = data.new_state ? '⭐' : '⚪';
+            const msg = data.new_state ? 'Added to Highlights' : 'Removed from Highlights';
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: msg,
+                showConfirmButton: false,
+                timer: 2000
+            }).then(() => {
+                location.reload(); // Reload to update the star icon color
+            });
+        }
+    });
+}

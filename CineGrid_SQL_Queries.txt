@@ -1,0 +1,373 @@
+
+CineGrid Website MySQL queries
+
+Note: As you may notice in this file that there are numerous count of tables,
+the reason for that is this project practices "Data Normalization". This process
+of organizing data in a database to reduce redundancy, improve data integrity, and make it more flexible.
+
+P.S. As you can see there are a lot of comments in the code and in this file. Please DO NOT modify anything 
+in the comments, this is to help me remember what that particular code is doing. DO NOT REMOVE ANYTHING
+> Right now, start only with MOVIES. As for series, disregard nio muna, inheritance lang katapat nyan para d na ulit isulat 
+ang code nang paulit ulit.
+
+1. ===== Database ======
+CREATE DATABASE cinegrid_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE cinegrid_db;
+
+2. ====== Users table (Admin + regular users =====
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,	
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('user', 'admin') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+3. ===== Movies Table =====
+CREATE TABLE movies (
+    movie_id INT AUTO_INCREMENT PRIMARY KEY,
+    tmdb_id INT NULL,
+    title VARCHAR(255) NOT NULL,
+    overview TEXT,
+    release_year YEAR,
+    poster_path VARCHAR(255),
+    backdrop_path VARCHAR(255),
+    rating DECIMAL(3,1) DEFAULT 0.0,
+    type ENUM('movie', 'series') DEFAULT 'movie',
+    is_featured TINYINT(1) DEFAULT 0,
+    status ENUM('active', 'hidden') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+3.1 ===== Genre Table =====
+CREATE TABLE genres (
+    genre_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+3.2 ===== Movies Genre =====
+CREATE TABLE movie_genres (
+    movie_id INT NOT NULL,
+    genre_id INT NOT NULL,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(genre_id) ON DELETE CASCADE
+);
+
+3.3. ===== Directors Table =====
+CREATE TABLE directors (
+    director_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL UNIQUE
+);
+
+3.4. ===== Movie Directors Table =====
+CREATE TABLE movie_directors (
+    movie_id INT NOT NULL,
+    director_id INT NOT NULL,
+    PRIMARY KEY (movie_id, director_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE
+);
+
+Why?
+A director can work on many movies
+A movie can have multiple directors
+
+3.5. ===== Actors =====
+CREATE TABLE actors (
+    actor_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(191) NOT NULL UNIQUE
+);
+
+3.6 ===== Cast =====
+CREATE TABLE movie_cast (
+    movie_id INT NOT NULL,
+    actor_id INT NOT NULL,
+    character_name VARCHAR(255) NULL,
+    PRIMARY KEY (movie_id, actor_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES actors(actor_id) ON DELETE CASCADE
+);
+
+Why?
+Actor reuse across movies
+Character name belongs to the relationship, not the actor
+
+3.7 ===== Trailer =====
+CREATE TABLE movie_trailers (
+    movie_id INT PRIMARY KEY,
+    youtube_url VARCHAR(255) NOT NULL,
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE
+);
+
+NOTE: after adding all of tables from numbers 3 to 3.7, you can stop right there and test with the data I provides
+from the other file. Make sure everything is working first.
+
+
+4. ===== Series Table =====
+CREATE TABLE series (
+    series_id INT AUTO_INCREMENT PRIMARY KEY,
+    tmdb_id INT NULL,
+    title VARCHAR(255) NOT NULL,
+    overview TEXT,
+    first_air_year YEAR,
+    poster_path VARCHAR(255),
+    backdrop_path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+5. ===== Seasons Table =====
+CREATE TABLE seasons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    series_id INT NOT NULL,
+    season_number INT NOT NULL,
+    overview TEXT,
+    release_year YEAR,
+    FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE
+);
+
+
+6. ===== Episode Table (For Series only) =====
+CREATE TABLE episodes (
+    episode_id INT AUTO_INCREMENT PRIMARY KEY,
+    series_id INT NOT NULL,
+    season_number INT NOT NULL,
+    episode_number INT NOT NULL,
+    title VARCHAR(255),
+    overview TEXT,
+    still_path VARCHAR(255),
+    air_date DATE,
+    FOREIGN KEY (series_id) REFERENCES series(series_id) ON DELETE CASCADE
+);
+
+7. ===== Ratings Table (Movies + Series) =====
+CREATE TABLE ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'series') NOT NULL,
+    content_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, content_type, content_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+8. ===== Reviews Table =====
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'series') NOT NULL,
+    content_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    title VARCHAR(255),
+    review TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+9. ===== Favorites/Watchlist (Optional, for now) =====
+CREATE TABLE favorites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content_type ENUM('movie', 'series') NOT NULL,
+    content_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, content_type, content_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+10. ===== Directors =====
+CREATE TABLE directors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+11. ===== Characters/Cast Table =====
+CREATE TABLE cast_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+12. ===== Movie-Director (Many-to-Many)
+CREATE TABLE movie_directors (
+    movie_id INT NOT NULL,
+    director_id INT NOT NULL,
+    PRIMARY KEY (movie_id, director_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+);
+
+13. ===== Movie Cast (with character names) =====
+CREATE TABLE movie_cast (
+    movie_id INT NOT NULL,
+    cast_id INT NOT NULL,
+    character_name VARCHAR(255),
+    PRIMARY KEY (movie_id, cast_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (cast_id) REFERENCES cast_members(id) ON DELETE CASCADE
+);
+
+============================================
+FOR FUTURE REFERENCING
+
+- Series Directors
+CREATE TABLE series_directors (
+    series_id INT NOT NULL,
+    director_id INT NOT NULL,
+    PRIMARY KEY (series_id, director_id),
+    FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+);
+
+- Series Cast
+CREATE TABLE series_cast (
+    series_id INT NOT NULL,
+    cast_id INT NOT NULL,
+    character_name VARCHAR(255),
+    PRIMARY KEY (series_id, cast_id),
+    FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE,
+    FOREIGN KEY (cast_id) REFERENCES cast_members(id) ON DELETE CASCADE
+);
+
+
+===== Admin Account =====
+<?php
+echo password_hash('cinegridadmin08', PASSWORD_DEFAULT);
+
+hash password = $2y$10$xUj3YDPvSXxL0RVEbw48juA6ruMSP1dUHBZQobFPxHb2ZmyMX4Zfm
+
+INSERT INTO users (full_name, email, password_hash, role)
+VALUES (
+	'CineGrid Admin',
+    'cinegridadmin@gmail.com',
+    '$2y$10$xUj3YDPvSXxL0RVEbw48juA6ruMSP1dUHBZQobFPxHb2ZmyMX4Zfm',
+    'admin'
+);
+
+Admin email = cinegrid@gmail.com
+admin pass = cinegridadmin08
+
+==================================================================================
+Helpful SQL Queries for CineGrid
+
+=== To find the count of admin/users ===
+SELECT role, 
+COUNT(*) 
+as total 
+FROM users 
+GROUP BY role;
+
+
+// DEBUG - REMOVE AFTER TESTING
+// echo '<pre>';
+// echo 'User ID: ' . ($_SESSION['user_id'] ?? 'NOT SET') . '<br>';
+// echo 'User Role: ' . ($_SESSION['user_role'] ?? 'NOT SET') . '<br>';
+// echo 'Role Type: ' . gettype($_SESSION['user_role'] ?? null) . '<br>';
+// echo '</pre>';
+// die(); // Stop here to see the output
+
+// If not logged in OR if logged in but NOT an admin, kick them out
+
+
+===== to show the actual count of movies and others =====
+<?php
+require_once 'includes/init.php';
+
+// Fetch Movie Count
+$movieCount = $Conn->query("SELECT COUNT(*) as total FROM movies")->fetch_assoc()['total'];
+
+// Fetch User Count
+$userCount = $Conn->query("SELECT COUNT(*) as total FROM users")->fetch_assoc()['total'];
+
+// Fetch Review Count (assuming you have a reviews table)
+$reviewCount = $Conn->query("SELECT COUNT(*) as total FROM reviews")->fetch_assoc()['total'];
+
+// Fetch Series Count (if you have a series table, otherwise set to 0)
+$seriesCount = 0; 
+$seriesCheck = $Conn->query("SHOW TABLES LIKE 'series'");
+if($seriesCheck->num_rows > 0) {
+    $seriesCount = $Conn->query("SELECT COUNT(*) as total FROM series")->fetch_assoc()['total'];
+}
+?>
+
+or this 
+
+<?php
+require_once 'includes/init.php';
+
+/**
+ * Formats numbers into a readable "K" or "M" format
+ */
+function formatStats($number) {
+    if ($number >= 1000000) {
+        return round($number / 1000000, 1) . 'M';
+    } elseif ($number >= 1000) {
+        return round($number / 1000, 1) . 'k';
+    }
+    return $number;
+}
+
+// Fetch the raw counts
+$movieCount  = $Conn->query("SELECT COUNT(*) as total FROM movies")->fetch_assoc()['total'] ?? 0;
+$userCount   = $Conn->query("SELECT COUNT(*) as total FROM users")->fetch_assoc()['total'] ?? 0;
+$reviewCount = $Conn->query("SELECT COUNT(*) as total FROM reviews")->fetch_assoc()['total'] ?? 0;
+$seriesCount = 0; // Set to 0 for now
+?>
+
+<div class="stat-card">
+    <div class="stat-icon" style="background: rgba(52, 152, 219, 0.2);">
+        <i class="bi bi-film" style="color: #3498db;"></i>
+    </div>
+    <div class="stat-value"><?php echo formatStats($movieCount); ?></div>
+    <div class="stat-label">Total Movies</div>
+</div>
+
+// Total non-admin users
+$memberCount = $Conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'user'")->fetch_assoc()['total'];
+
+// Total admins/moderators
+$staffCount = $Conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'admin'")->fetch_assoc()['total'];
+
+<tr>
+                            <td><span class="badge bg-success">Added</span></td>
+                            <td>The Dark Knight</td>
+                            <td>admin@cinegrid.com</td>
+                            <td>2 hours ago</td>
+                            <td><span class="status-badge status-active">Success</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">Updated</span></td>
+                            <td>Breaking Bad - Season 5</td>
+                            <td>editor@cinegrid.com</td>
+                            <td>5 hours ago</td>
+                            <td><span class="status-badge status-active">Success</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">Deleted</span></td>
+                            <td>User Review #1234</td>
+                            <td>moderator@cinegrid.com</td>
+                            <td>1 day ago</td>
+                            <td><span class="status-badge status-active">Success</span></td>
+                        </tr>
+
+-- 1. Disable foreign key checks so we can empty the 'parent' tables
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 2. Empty the junction/link tables
+TRUNCATE TABLE movie_genres;
+TRUNCATE TABLE movie_cast;
+TRUNCATE TABLE movie_directors;
+TRUNCATE TABLE movie_trailers;
+
+-- 3. Empty the main tables
+TRUNCATE TABLE movies;
+TRUNCATE TABLE actors;
+TRUNCATE TABLE directors;
+TRUNCATE TABLE genres;
+
+-- 4. Re-enable the safety checks
+SET FOREIGN_KEY_CHECKS = 1;

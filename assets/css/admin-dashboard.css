@@ -354,3 +354,9 @@ body {
     background: none;
     border-bottom-color: #667eea;
 }
+
+.genre-item .btn-check:checked + .btn-outline-primary {
+    background-color: #0d6efd;
+    color: white;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+}

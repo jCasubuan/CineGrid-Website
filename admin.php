@@ -1,6 +1,57 @@
+<!-- PHP connection -->
 <?php
-    session_start();
-    include 'includes/db_connect.php';
+require_once 'includes/init.php';
+
+// error handling for unauthorized access of admin.php from the url
+if (
+    empty($_SESSION['user_id']) ||
+    empty($_SESSION['user_role']) ||
+    $_SESSION['user_role'] !== 'admin'
+) {
+    header('Location: index.php?error=unauthorized');
+    exit;
+}
+
+// Fetch movie count
+$movieCount = $Conn->query("SELECT COUNT(*) as total FROM movies")->fetch_assoc()['total'];
+
+// // Fetch Series Count (if you have a series table, otherwise set to 0)
+// $seriesCount = $Conn->query("SELECT COUNT(*) as total FROM series")->fetch_assoc()['total'];
+
+// Fetch User Count
+$userCount = $Conn->query("SELECT COUNT(*) as total FROM users WHERE role != 'admin'")->fetch_assoc()['total'];
+
+// // Fetch Review Count (assuming you have a reviews table)
+// $reviewCount = $Conn->query("SELECT COUNT(*) as total FROM reviews")->fetch_assoc()['total'];
+
+// to get the 5 recent activity
+$recentActivity = $Conn->query("
+    SELECT title, created_at 
+    FROM movies 
+    ORDER BY created_at DESC 
+    LIMIT 5
+");
+
+// Pagination Logic
+$limit = 5; // Items per page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Get total movies for pagination count
+$total_res = $Conn->query("SELECT COUNT(*) as count FROM movies");
+$total_movies = $total_res->fetch_assoc()['count'];
+$total_pages = ceil($total_movies / $limit);
+
+// Fetch only 5 movies for the current page 
+// Note: We JOIN movie_genres and genres to get the names
+$movies_query = "SELECT m.*, GROUP_CONCAT(g.name SEPARATOR ', ') as genre_names 
+                 FROM movies m 
+                 LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id 
+                 LEFT JOIN genres g ON mg.genre_id = g.genre_id 
+                 GROUP BY m.movie_id 
+                 ORDER BY m.movie_id DESC 
+                 LIMIT $limit OFFSET $offset";
+$movies = $Conn->query($movies_query);
 ?>
 
 <!DOCTYPE html>
@@ -10,12 +61,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="CineGrid Admin Dashboard - Manage movies, series, and users">
-    <title>Admin Dashboard | CineGrid</title>
+    <title>CineGrid | <?php echo ucfirst($current_page); ?></title>
 
-    <!-- Bootstrap 5 CSS -->
+    <!-- Site Icon / Logo -->
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+
+    <!-- BootStrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Boostrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/admin-dashboard.css">
@@ -24,85 +86,7 @@
 
 <body>
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="sidebar-logo">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
-                    <rect x="40" y="50" width="120" height="100" fill="none" stroke="#667eea" stroke-width="4" rx="8"/>
-                    <line x1="100" y1="50" x2="100" y2="150" stroke="#667eea" stroke-width="4"/>
-                    <line x1="40" y1="100" x2="160" y2="100" stroke="#667eea" stroke-width="4"/>
-                    <rect x="30" y="60" width="8" height="12" fill="#667eea" rx="2"/>
-                    <rect x="30" y="94" width="8" height="12" fill="#667eea" rx="2"/>
-                    <rect x="30" y="128" width="8" height="12" fill="#667eea" rx="2"/>
-                    <rect x="162" y="60" width="8" height="12" fill="#667eea" rx="2"/>
-                    <rect x="162" y="94" width="8" height="12" fill="#667eea" rx="2"/>
-                    <rect x="162" y="128" width="8" height="12" fill="#667eea" rx="2"/>
-                    <polygon points="90,80 90,120 120,100" fill="#667eea"/>
-                </svg>
-                <span>CineGrid</span>
-            </a>
-            <small class="text-white d-block mt-2">Admin Panel</small>
-        </div>
-
-        <!-- Sidebar menu -->
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="#dashboard" class="sidebar-menu-link active" data-section="dashboard">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <!-- Movies -->
-            <li class="sidebar-menu-item">
-                <a href="#movies" class="sidebar-menu-link" data-section="movies">
-                    <i class="bi bi-film"></i>
-                    <span>Movies</span>
-                </a>
-            </li>
-            <!-- Series -->
-            <li class="sidebar-menu-item">
-                <a href="#series" class="sidebar-menu-link" data-section="series">
-                    <i class="bi bi-tv"></i>
-                    <span>Series</span>
-                </a>
-            </li>
-            <!-- Users -->
-            <li class="sidebar-menu-item">
-                <a href="#users" class="sidebar-menu-link" data-section="users">
-                    <i class="bi bi-people"></i>
-                    <span>Users</span>
-                </a>
-            </li>
-            <!-- Reviews -->
-            <li class="sidebar-menu-item">
-                <a href="#reviews" class="sidebar-menu-link" data-section="reviews">
-                    <i class="bi bi-chat-square-text"></i>
-                    <span>Reviews</span>
-                </a>
-            </li>
-            <!-- Analytics -->
-             <li class="sidebar-menu-item">
-                <a href="#analytics" class="sidebar-menu-link" data-section="analytics">
-                    <i class="bi bi-graph-up"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
-            <!-- Settings -->
-            <li class="sidebar-menu-item">
-                <a href="#settings" class="sidebar-menu-link" data-section="settings">
-                    <i class="bi bi-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-            <!-- Back to site -->
-            <li class="sidebar-menu-item mt-4">
-                <a href="home.html" class="sidebar-menu-link">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Back to Site</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php include 'includes/admin-sidebar.php'; ?>
 
     <!-- Mobile Toggle -->
     <button class="mobile-toggle" id="mobileToggle">
@@ -111,6 +95,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
+
         <!-- Top Bar -->
         <div class="top-bar">
             <div>
@@ -121,8 +106,11 @@
                 <button class="btn btn-outline-light btn-sm">
                     <i class="bi bi-bell"></i>
                 </button>
+
                 <!-- Logout button -->
-                <button class="btn btn-outline-danger btn-sm" onclick="alert('Logout functionality')">
+                <button class="btn btn-outline-danger btn-sm" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#logoutConfirmModal">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </div>
@@ -140,7 +128,7 @@
                         <div class="stat-icon" style="background: rgba(52, 152, 219, 0.2);">
                             <i class="bi bi-film" style="color: #3498db;"></i>
                         </div>
-                        <div class="stat-value">248</div>
+                        <div class="stat-value"><?php echo $movieCount; ?></div>
                         <div class="stat-label">Total Movies</div>
                     </div>
                 </div>
@@ -150,7 +138,7 @@
                         <div class="stat-icon" style="background: rgba(46, 204, 113, 0.2);">
                             <i class="bi bi-tv" style="color: #2ecc71;"></i>
                         </div>
-                        <div class="stat-value">186</div>
+                        <div class="stat-value">0</div>
                         <div class="stat-label">Total Series</div>
                     </div>
                 </div>
@@ -160,7 +148,7 @@
                         <div class="stat-icon" style="background: rgba(155, 89, 182, 0.2);">
                             <i class="bi bi-people" style="color: #9b59b6;"></i>
                         </div>
-                        <div class="stat-value">12,453</div>
+                        <div class="stat-value"><?php echo $userCount; ?></div>
                         <div class="stat-label">Total Users</div>
                     </div>
                 </div>
@@ -170,7 +158,7 @@
                         <div class="stat-icon" style="background: rgba(241, 196, 15, 0.2);">
                             <i class="bi bi-chat-square-text" style="color: #f1c40f;"></i>
                         </div>
-                        <div class="stat-value">8,921</div>
+                        <div class="stat-value">0</div>
                         <div class="stat-label">Total Reviews</div>
                     </div>
                 </div>
@@ -187,32 +175,31 @@
                             <th>Action</th>
                             <th>Item</th>
                             <th>User</th>
-                            <th>Date</th>
+                            <th>Date Added</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><span class="badge bg-success">Added</span></td>
-                            <td>The Dark Knight</td>
-                            <td>admin@cinegrid.com</td>
-                            <td>2 hours ago</td>
-                            <td><span class="status-badge status-active">Success</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge bg-primary">Updated</span></td>
-                            <td>Breaking Bad - Season 5</td>
-                            <td>editor@cinegrid.com</td>
-                            <td>5 hours ago</td>
-                            <td><span class="status-badge status-active">Success</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge bg-danger">Deleted</span></td>
-                            <td>User Review #1234</td>
-                            <td>moderator@cinegrid.com</td>
-                            <td>1 day ago</td>
-                            <td><span class="status-badge status-active">Success</span></td>
-                        </tr>
+                        <?php if ($recentActivity->num_rows > 0): ?>
+                            <?php while($row = $recentActivity->fetch_assoc()): ?>
+                                <tr>
+                                    <td><span class="badge bg-success">Added</span></td>
+                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
+                                    <td>CineGrid Admin</td>
+                                    <td>
+                                        <?php 
+                                            // Formats the timestamp to something like "Dec 29, 2025"
+                                            echo date('M d, Y', strtotime($row['created_at'])); 
+                                        ?>
+                                    </td>
+                                    <td><span class="status-badge status-active">Success</span></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-white">No recent activity found.</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -264,87 +251,72 @@
                             <th>Title</th>
                             <th>Genre</th>
                             <th>Year</th>
-                            <th>Rating</th>
-                            <th>Status</th>
+                            <th>Ratings</th>
+                            <th>Featured</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="moviesTableBody">
-                        <tr>
-                            <td>001</td>
-                            <td><img src="https://via.placeholder.com/50x75/667eea/ffffff?text=TDK" class="thumbnail" alt="Movie"></td>
-                            <td>The Dark Knight</td>
-                            <td>Action</td>
-                            <td>2008</td>
-                            <td><i class="bi bi-star-fill text-warning"></i> 9.0</td>
-                            <td><span class="status-badge status-active">Active</span></td>
-                            <td>
-                                <button class="action-btn btn-view" onclick="viewMovie(1)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="action-btn btn-edit" data-bs-toggle="modal" data-bs-target="#editMovieModal">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="action-btn btn-delete" onclick="deleteMovie(1)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>002</td>
-                            <td><img src="https://via.placeholder.com/50x75/764ba2/ffffff?text=INC" class="thumbnail" alt="Movie"></td>
-                            <td>Inception</td>
-                            <td>Sci-Fi</td>
-                            <td>2010</td>
-                            <td><i class="bi bi-star-fill text-warning"></i> 8.8</td>
-                            <td><span class="status-badge status-active">Active</span></td>
-                            <td>
-                                <button class="action-btn btn-view" onclick="viewMovie(2)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="action-btn btn-edit" data-bs-toggle="modal" data-bs-target="#editMovieModal">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="action-btn btn-delete" onclick="deleteMovie(2)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>003</td>
-                            <td><img src="https://via.placeholder.com/50x75/4ecdc4/ffffff?text=INT" class="thumbnail" alt="Movie"></td>
-                            <td>Interstellar</td>
-                            <td>Sci-Fi</td>
-                            <td>2014</td>
-                            <td><i class="bi bi-star-fill text-warning"></i> 8.6</td>
-                            <td><span class="status-badge status-active">Active</span></td>
-                            <td>
-                                <button class="action-btn btn-view" onclick="viewMovie(3)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="action-btn btn-edit" data-bs-toggle="modal" data-bs-target="#editMovieModal">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="action-btn btn-delete" onclick="deleteMovie(3)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <?php if ($movies->num_rows > 0): ?>
+                            <?php while($row = $movies->fetch_assoc()): ?>
+                                <tr>
+                                    <td>#<?= str_pad($row['movie_id'], 3, '0', STR_PAD_LEFT); ?></td>
+                                    <td>
+                                        <img src="<?= $row['poster_path'] ?: 'assets/img/no-poster.jpg'; ?>" 
+                                            class="thumbnail" alt="Poster" style="width:50px; height:75px; object-fit:cover;">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold"><?= htmlspecialchars($row['title']); ?></div>
+                                        <small class="text-white"><?= ucfirst($row['type']); ?></small>
+                                    </td>
+                                    <td><span class="small"><?= htmlspecialchars($row['genre_names'] ?: 'N/A'); ?></span></td>
+                                    <td><?= $row['release_year']; ?></td>                                
+                                    <td>
+                                        <span class="badge bg-dark text-warning border border-warning">
+                                            <i class="bi bi-star-fill me-1"></i><?= $row['rating']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm <?= $row['is_featured'] ? 'btn-warning' : 'btn-outline-secondary' ?>" 
+                                                onclick="toggleFeatured(<?= $row['movie_id']; ?>)" 
+                                                title="Toggle Hero Banner">
+                                            <i class="bi <?= $row['is_featured'] ? 'bi-lightning-fill' : 'bi-lightning' ?>"></i>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn btn-view" onclick="viewMovie(<?= $row['movie_id']; ?>)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="action-btn btn-edit" data-bs-toggle="modal" data-bs-target="#editMovieModal">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="action-btn btn-delete" onclick="deleteMovie(<?= $row['movie_id']; ?>, '<?= addslashes($row['title']); ?>')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr><td colspan="6" class="text-center py-4 text-white">No movies found.</td></tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination -->
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#">Previous</a>
+                    <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?page=<?= $page - 1; ?>">Previous</a>
                     </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">Next</a>
+
+                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
+                        <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+                            <a class="page-link" href="?page=<?= $i; ?>"><?= $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="?page=<?= $page + 1; ?>">Next</a>
                     </li>
                 </ul>
             </nav>
@@ -647,341 +619,10 @@
         </section>
     </main>
     
-    <!-- Add Movie Modal -->
-    <div class="modal fade" id="addMovieModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-plus-circle me-2"></i>Add New Movie</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addMovieForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Movie Title *</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Year *</label>
-                                <input type="number" class="form-control" min="1900" max="2030" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Genre *</label>
-                                <select class="form-select" required>
-                                    <option value="">Select Genre</option>
-                                    <option>Action</option>
-                                    <option>Comedy</option>
-                                    <option>Drama</option>
-                                    <option>Horror</option>
-                                    <option>Sci-Fi</option>
-                                    <option>Thriller</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Duration (minutes) *</label>
-                                <input type="number" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Director *</label>
-                            <input type="text" class="form-control" required>
-                            </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cast (comma separated)</label>
-                            <input type="text" class="form-control" placeholder="Actor 1, Actor 2, Actor 3">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Synopsis *</label>
-                            <textarea class="form-control" rows="4" required></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Rating (IMDb)</label>
-                                <input type="number" class="form-control" step="0.1" min="0" max="10">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Poster URL</label>
-                                <input type="url" class="form-control">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Trailer URL (YouTube)</label>
-                            <input type="url" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="addMovieForm" class="btn btn-primary">Add Movie</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php 
+        include 'includes/admin-modals/movie-modals.php'; 
+        include 'includes/admin-modals/series-modals.php';
+        include 'includes/admin-modals/user-modals.php';
+    ?>
 
-    <!-- Edit Movie Modal -->
-     <div class="modal fade" id="editMovieModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Movie</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editMovieForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Movie Title *</label>
-                                <input type="text" class="form-control" value="The Dark Knight" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Year *</label>
-                                <input type="number" class="form-control" value="2008" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Genre *</label>
-                                <select class="form-select" required>
-                                    <option>Action</option>
-                                    <option>Comedy</option>
-                                    <option>Drama</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Duration (minutes) *</label>
-                                <input type="number" class="form-control" value="152" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Synopsis *</label>
-                            <textarea class="form-control" rows="4" required>Batman faces the Joker...</textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select">
-                                <option value="active" selected>Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="editMovieForm" class="btn btn-primary">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Series Modal -->
-     <div class="modal fade" id="addSeriesModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white"><i class="bi bi-plus-circle me-2"></i>Add New Series</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addSeriesForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Series Title *</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Year Range *</label>
-                                <input type="text" class="form-control" placeholder="2008-2013" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Genre *</label>
-                                <select class="form-select" required>
-                                    <option value="">Select Genre</option>
-                                    <option>Action</option>
-                                    <option>Comedy</option>
-                                    <option>Drama</option>
-                                    <option>Crime</option>
-                                    <option>Fantasy</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Seasons *</label>
-                                <input type="number" class="form-control" min="1" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Episodes *</label>
-                                <input type="number" class="form-control" min="1" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Creator *</label>
-                            <input type="text" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Synopsis *</label>
-                            <textarea class="form-control" rows="4" required></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Rating (IMDb)</label>
-                                <input type="number" class="form-control" step="0.1" min="0" max="10">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select">
-                                    <option value="ongoing">Ongoing</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="upcoming">Upcoming</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="addSeriesForm" class="btn btn-primary">Add Series</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Series Modal -->
-     <div class="modal fade" id="editSeriesModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Series</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editSeriesForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Series Title *</label>
-                                <input type="text" class="form-control" value="Breaking Bad" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select">
-                                    <option value="ongoing">Ongoing</option>
-                                    <option value="completed" selected>Completed</option>
-                                    <option value="upcoming">Upcoming</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Synopsis *</label>
-                            <textarea class="form-control" rows="4" required>A chemistry teacher turns to crime...</textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="editSeriesForm" class="btn btn-primary">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add User Modal -->
-     <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New User</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addUserForm">
-                        <div class="mb-3">
-                            <label class="form-label">Full Name *</label>
-                            <input type="text" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email *</label>
-                            <input type="email" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password *</label>
-                            <input type="password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role *</label>
-                            <select class="form-select" required>
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                                <option value="moderator">Moderator</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="addUserForm" class="btn btn-primary">Add User</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit User Modal -->
-     <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit User</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editUserForm">
-                        <div class="mb-3">
-                            <label class="form-label">Full Name *</label>
-                            <input type="text" class="form-control" value="John Doe" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email *</label>
-                            <input type="email" class="form-control" value="john@example.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role *</label>
-                            <select class="form-select" required>
-                                <option value="user" selected>User</option>
-                                <option value="admin">Admin</option>
-                                <option value="moderator">Moderator</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select class="form-select">
-                                <option value="active" selected>Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="editUserForm" class="btn btn-primary">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
-
-    <script src="assets/js/admin-dashboard.js"></script>
-</body>
-</html>
+    <?php include 'includes/footer.php'; ?>

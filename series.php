@@ -36,6 +36,9 @@ require_once 'includes/init.php';
 </head>
 
 <body>
+    <!-- Banner for admin browsing pagaes -->
+    <?php include 'includes/admin-banner.php'; ?>
+
     <!-- for PHP -->
     <?php include 'includes/navbar.php'; ?>
 
@@ -241,7 +244,7 @@ require_once 'includes/init.php';
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="seriesGrid">
                     <!-- Series Card 1 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -264,7 +267,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 2 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -287,7 +290,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 3 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -310,7 +313,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 4 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -333,7 +336,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 5 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -356,7 +359,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 6 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -379,7 +382,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 7 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV
@@ -402,7 +405,7 @@ require_once 'includes/init.php';
 
                     <!-- Series Card 8 -->
                     <div class="col">
-                        <a href="series-details.html" class="text-decoration-none">
+                        <a href="series-details.php" class="text-decoration-none">
                             <div class="card media-card bg-dark text-white position-relative">
                                 <span class="series-badge">
                                     <i class="bi bi-tv"></i> TV

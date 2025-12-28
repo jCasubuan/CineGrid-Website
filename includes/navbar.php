@@ -77,17 +77,31 @@
                             aria-expanded="false">
                             <i class="bi bi-person-fill me-1"></i>
                             <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Profile'); ?>
+
+                            <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
+                                <span class="badge bg-danger ms-2" style="font-size: 0.6rem;">ADMIN</span>
+                            <?php endif; ?>
                         </button>
 
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
                             aria-labelledby="userProfileDropdown">
+
+                            <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
+                                <li>
+                                    <a class="dropdown-item text-warning fw-bold" href="admin.php">
+                                        <i class="bi bi-speedometer2 me-2"></i> Admin Dashboard
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                            <?php endif; ?>
+                            
                             <li>
                                 <a class="dropdown-item" href="profile.php">
                                     <i class="bi bi-person me-2"></i> View Profile
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="settings.php">
+                                <a class="dropdown-item" href="#">
                                     <i class="bi bi-gear me-2"></i> Settings
                                 </a>
                             </li>

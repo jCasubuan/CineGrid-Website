@@ -1,6 +1,10 @@
+<?php if ($current_page !== 'admin'): ?>
+<!-- Regular user footer -->
 <footer class="bg-dark text-center py-4 mt-5">
     <div class="container">
-        <p class="mb-2">© 2025 CineGrid. All rights reserved.</p>
+        <p class="mb-2">© 2026 
+            <strong>CineGrid</strong>. All rights reserved.
+        </p>
         <div class="text-center mb-3">
             <a href="#" class="text-white text-decoration-none">About</a>
             <span class="text-white mx-2">&bull;</span>
@@ -19,6 +23,7 @@
         </div>
     </div>
 </footer>
+<?php endif; ?>
 
 <?php include 'includes/main-modals.php'; ?>
 
@@ -52,6 +57,10 @@
 
 <?php if (in_array($current_page, ['movie-details', 'series-details'])): ?>
     <script src="assets/js/details-rating.js"></script>
+<?php endif; ?>
+
+<?php if ($current_page === 'admin'): ?>
+    <script src="assets/js/admin-dashboard.js"></script>
 <?php endif; ?>
 
 <!-- 
